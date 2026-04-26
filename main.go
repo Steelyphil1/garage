@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Steelyphil1/garage/route"
+	"github.com/Steelyphil1/garage/types"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/phillipbay/garage/route"
-	"github.com/phillipbay/garage/types"
 )
 
 func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
@@ -16,10 +16,10 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	resp, err := route.RouteRequest(ctx, req)
 	if err != nil {
-		return types.ErrorResponse(500, "BOOM"), err
+		return types.ErrorResponse(500, err.Error()), nil
 	}
 
-	return *resp, err
+	return *resp, nil
 }
 
 func main() {

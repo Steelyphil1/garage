@@ -10,12 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 
+	garageTypes "github.com/Steelyphil1/garage/types"
 	"github.com/aws/aws-lambda-go/events"
-	garageTypes "github.com/phillipbay/garage/types"
 )
 
 func HandlePut(ctx context.Context, req garageTypes.GaragePutRequest) (*events.APIGatewayV2HTTPResponse, error) {
-	fmt.Printf("In HandlePut with: %+v", req)
 	err := req.Valid()
 	if err != nil {
 		return nil, err
@@ -34,7 +33,7 @@ func HandlePut(ctx context.Context, req garageTypes.GaragePutRequest) (*events.A
 		Key: map[string]types.AttributeValue{
 			"id": &types.AttributeValueMemberS{Value: "garage"},
 		},
-		UpdateExpression: new("SET #s = :status, event_time = :time"),
+		UpdateExpression: aws.String("SET #s = :status, event_time = :time"),
 		ExpressionAttributeNames: map[string]string{
 			"#s": "status",
 		},

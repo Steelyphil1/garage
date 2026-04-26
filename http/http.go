@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Steelyphil1/garage/types"
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/phillipbay/garage/types"
 )
 
 func DecodePutGarageStateRequest(_ context.Context, r types.BaseHTTPRequest) (*types.GaragePutRequest, error) {
-	fmt.Println("IN DECODE PUT")
 	request := types.GaragePutRequest{}
 
 	if r.Body != "" {
@@ -23,12 +22,10 @@ func DecodePutGarageStateRequest(_ context.Context, r types.BaseHTTPRequest) (*t
 }
 
 func DecodeGetGarageStateRequest(_ context.Context, r types.BaseHTTPRequest) (*types.GarageGetRequest, error) {
-	fmt.Println("IN DECODE GET")
 	return &types.GarageGetRequest{}, nil
 }
 
 func PrepGetResponse(ctx context.Context, state types.GarageEvent) (*events.APIGatewayV2HTTPResponse, error) {
-	fmt.Printf("In PrepGetResponse with: %+v", state)
 	responseBody, err := json.Marshal(state)
 	if err != nil {
 		return nil, fmt.Errorf("marshalling state")
