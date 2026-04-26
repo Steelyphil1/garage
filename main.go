@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/Steelyphil1/garage/route"
 	"github.com/Steelyphil1/garage/types"
@@ -16,7 +17,7 @@ func handler(ctx context.Context, request events.APIGatewayV2HTTPRequest) (event
 
 	resp, err := route.RouteRequest(ctx, req)
 	if err != nil {
-		return types.ErrorResponse(500, err.Error()), nil
+		return types.ErrorResponse(http.StatusBadRequest, err.Error()), nil
 	}
 
 	return *resp, nil
