@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	garageHttp "github.com/Steelyphil1/garage/http"
-	"github.com/Steelyphil1/garage/service"
-	"github.com/Steelyphil1/garage/types"
+	garageHttp "github.com/Steelyphil1/garage/lambda/http"
+	"github.com/Steelyphil1/garage/lambda/service"
+	"github.com/Steelyphil1/garage/lambda/types"
 	"github.com/aws/aws-lambda-go/events"
 )
 

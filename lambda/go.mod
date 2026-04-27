@@ -1,4 +1,4 @@
-module github.com/Steelyphil1/garage
+module github.com/Steelyphil1/garage/lambda
 
 go 1.26
 
