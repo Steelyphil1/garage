@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Steelyphil1/garage/route"
-	"github.com/Steelyphil1/garage/types"
+	"github.com/Steelyphil1/garage/lambda/route"
+	"github.com/Steelyphil1/garage/lambda/types"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )

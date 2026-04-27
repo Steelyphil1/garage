@@ -43,7 +43,11 @@ type BaseHTTPRequest struct {
 }
 
 func ErrorResponse(statusCode int, message string) events.APIGatewayV2HTTPResponse {
-	body, _ := json.Marshal(map[string]string{"error": message})
+	body, err := json.Marshal(map[string]string{"error": message})
+	if err != nil {
+		body = []byte(`{"error":"internal server error"}`)
+	}
+
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: statusCode,
 		Headers:    map[string]string{"Content-Type": "application/json"},

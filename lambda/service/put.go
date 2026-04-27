@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 
-	garageTypes "github.com/Steelyphil1/garage/types"
+	garageTypes "github.com/Steelyphil1/garage/lambda/types"
 	"github.com/aws/aws-lambda-go/events"
 )
 
@@ -22,11 +23,16 @@ func HandlePut(ctx context.Context, req garageTypes.GaragePutRequest) (*events.A
 
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("loading aws config")
+		return nil, fmt.Errorf("loading aws config: %w", err)
 	}
 	client := dynamodb.NewFromConfig(cfg)
 
-	now := time.Now().Unix()
+	now := time.Now()
+
+	event := garageTypes.GarageEvent{
+		EventTime:   now,
+		GarageState: garageTypes.GarageState(req.State),
+	}
 
 	_, err = client.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		TableName: aws.String("GarageStatus"),
@@ -39,11 +45,16 @@ func HandlePut(ctx context.Context, req garageTypes.GaragePutRequest) (*events.A
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":status": &types.AttributeValueMemberS{Value: req.State},
-			":time":   &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", now)},
+			":time":   &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", now.Unix())},
 		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("updating garage state in dynamo: %w", err)
+	}
+
+	body, err := json.Marshal(event)
+	if err != nil {
+		return nil, fmt.Errorf("marshalling response: %w", err)
 	}
 
 	return &events.APIGatewayV2HTTPResponse{
@@ -52,5 +63,6 @@ func HandlePut(ctx context.Context, req garageTypes.GaragePutRequest) (*events.A
 			"Content-Type":                "application/json",
 			"Access-Control-Allow-Origin": "*",
 		},
+		Body: string(body),
 	}, nil
 }

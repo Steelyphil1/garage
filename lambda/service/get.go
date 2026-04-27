@@ -11,13 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 
-	garageTypes "github.com/Steelyphil1/garage/types"
+	garageTypes "github.com/Steelyphil1/garage/lambda/types"
 )
 
 func HandleGet(ctx context.Context, req garageTypes.GarageGetRequest) (*garageTypes.GarageEvent, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("loading aws config")
+		return nil, fmt.Errorf("loading aws config: %w", err)
 	}
 	client := dynamodb.NewFromConfig(cfg)
 
