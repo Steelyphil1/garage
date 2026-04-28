@@ -1,8 +1,9 @@
-module github.com/Steelyphil1/garage/lambda
+module github.com/Steelyphil1/garage
 
 go 1.26
 
 require (
+	github.com/Steelyphil1/garage/lambda v0.0.0-20260427194247-867ebc996d92
 	github.com/aws/aws-lambda-go v1.54.0
 	github.com/aws/aws-sdk-go-v2 v1.41.6
 	github.com/aws/aws-sdk-go-v2/config v1.32.16
