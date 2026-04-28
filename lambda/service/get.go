@@ -11,33 +11,43 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 
-	garageTypes "github.com/Steelyphil1/garage/lambda/types"
+	garageTypes "github.com/Steelyphil1/garage/types"
 )
 
-func HandleGet(ctx context.Context, req garageTypes.GarageGetRequest) (*garageTypes.GarageEvent, error) {
-	cfg, err := config.LoadDefaultConfig(ctx)
+func HandleGet(ctx context.Context, cfg garageTypes.GarageConfig, req garageTypes.GarageGetRequest) (*garageTypes.GarageEvent, error) {
+	awsCfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("loading aws config: %w", err)
 	}
-	client := dynamodb.NewFromConfig(cfg)
+	client := dynamodb.NewFromConfig(awsCfg)
 
-	out, err := client.GetItem(ctx, &dynamodb.GetItemInput{
-		TableName: aws.String("GarageStatus"),
-		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: "garage"},
+	out, err := client.Query(ctx, &dynamodb.QueryInput{
+		TableName:              aws.String(cfg.TableName),
+		IndexName:              aws.String("entity-event_time-index"),
+		KeyConditionExpression: aws.String("entity = :entity"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":entity": &types.AttributeValueMemberS{Value: cfg.Partition},
 		},
+		ScanIndexForward: aws.Bool(false),
+		Limit:            aws.Int32(1),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	status, err := extractStringFromDynamoOutput(*out, "status")
+	if len(out.Items) == 0 {
+		return nil, fmt.Errorf("no events found")
+	}
+
+	item := out.Items[0]
+
+	status, err := extractStringFromItem(item, "status")
 	if err != nil {
 		return nil, err
 	}
 	state := garageTypes.GarageState(status)
 
-	eventTime, err := extractNumberFromDynamoOutput(*out, "event_time")
+	eventTime, err := extractNumberFromItem(item, "event_time")
 	if err != nil {
 		return nil, err
 	}
@@ -48,8 +58,8 @@ func HandleGet(ctx context.Context, req garageTypes.GarageGetRequest) (*garageTy
 	}, nil
 }
 
-func extractStringFromDynamoOutput(out dynamodb.GetItemOutput, key string) (string, error) {
-	val, ok := out.Item[key]
+func extractStringFromItem(item map[string]types.AttributeValue, key string) (string, error) {
+	val, ok := item[key]
 	if !ok {
 		return "", fmt.Errorf("%s field not found in item", key)
 	}
@@ -61,8 +71,8 @@ func extractStringFromDynamoOutput(out dynamodb.GetItemOutput, key string) (stri
 	return member.Value, nil
 }
 
-func extractNumberFromDynamoOutput(out dynamodb.GetItemOutput, key string) (int64, error) {
-	val, ok := out.Item[key]
+func extractNumberFromItem(item map[string]types.AttributeValue, key string) (int64, error) {
+	val, ok := item[key]
 	if !ok {
 		return -1, fmt.Errorf("%s field not found in item", key)
 	}
