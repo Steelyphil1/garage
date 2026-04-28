@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Steelyphil1/garage/lambda/types"
+	"github.com/Steelyphil1/garage/types"
 	"github.com/aws/aws-lambda-go/events"
 )
 

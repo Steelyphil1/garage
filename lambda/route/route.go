@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"net/http"
 
-	garageHttp "github.com/Steelyphil1/garage/lambda/http"
-	"github.com/Steelyphil1/garage/lambda/service"
-	"github.com/Steelyphil1/garage/lambda/types"
+	garageHttp "github.com/Steelyphil1/garage/http"
+	"github.com/Steelyphil1/garage/service"
+	"github.com/Steelyphil1/garage/types"
 	"github.com/aws/aws-lambda-go/events"
 )
 
-func RouteRequest(ctx context.Context, request types.BaseHTTPRequest) (*events.APIGatewayV2HTTPResponse, error) {
+func RouteRequest(ctx context.Context, cfg types.GarageConfig, request types.BaseHTTPRequest) (*events.APIGatewayV2HTTPResponse, error) {
 	if request.Method == http.MethodGet {
 		decodedReq, err := garageHttp.DecodeGetGarageStateRequest(ctx, request)
 		if err != nil {
 			return nil, err
 		}
 
-		state, err := service.HandleGet(ctx, *decodedReq)
+		state, err := service.HandleGet(ctx, cfg, *decodedReq)
 		if err != nil {
 			return nil, err
 		}
@@ -31,7 +31,7 @@ func RouteRequest(ctx context.Context, request types.BaseHTTPRequest) (*events.A
 			return nil, err
 		}
 
-		return service.HandlePut(ctx, *decodedReq)
+		return service.HandlePut(ctx, cfg, *decodedReq)
 	}
 
 	return nil, fmt.Errorf("invalid method")

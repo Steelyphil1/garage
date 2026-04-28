@@ -8,6 +8,11 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 )
 
+type GarageConfig struct {
+	TableName string
+	Partition string
+}
+
 type GarageState string
 
 const (
