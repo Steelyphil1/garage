@@ -1,8 +1,14 @@
 import { Box } from "@mui/material";
+import type { Metadata } from 'next';
 
 import ThemeRegistry from './theme-registry';
 import Header from './components/Header';
 import Footer from './components/Footer';
+
+export const metadata: Metadata = {
+  title: 'Phillip\'s Garage',
+  description: 'Garage door monitor',
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
