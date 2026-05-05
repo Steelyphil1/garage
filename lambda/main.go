@@ -38,5 +38,11 @@ func buildConfig() (*types.GarageConfig, error) {
 	return &types.GarageConfig{
 		TableName: os.Getenv("DYNAMO_TABLE_NAME"),
 		Partition: os.Getenv("DYNAMO_PARTITION_KEY"),
+		EmailConfig: types.EmailConfig{
+			EmailTo:      os.Getenv("EMAIL_TO"),
+			EmailFrom:    os.Getenv("EMAIL_FROM"),
+			EmailSubject: os.Getenv("EMAIL_SUBJECT"),
+			EmailBody:    os.Getenv("EMAIL_BODY"),
+		},
 	}, nil
 }

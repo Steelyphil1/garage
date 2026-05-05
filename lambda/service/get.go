@@ -14,7 +14,7 @@ import (
 	garageTypes "github.com/Steelyphil1/garage/types"
 )
 
-func HandleGet(ctx context.Context, cfg garageTypes.GarageConfig, req garageTypes.GarageGetRequest) (*garageTypes.GarageEvent, error) {
+func HandleGet(ctx context.Context, cfg garageTypes.GarageConfig, req garageTypes.GarageGetRequest) ([]garageTypes.GarageEvent, error) {
 	awsCfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("loading aws config: %w", err)
@@ -29,33 +29,41 @@ func HandleGet(ctx context.Context, cfg garageTypes.GarageConfig, req garageType
 			":entity": &types.AttributeValueMemberS{Value: cfg.Partition},
 		},
 		ScanIndexForward: aws.Bool(false),
-		Limit:            aws.Int32(1),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	if len(out.Items) == 0 {
+	return itemsToEvents(out.Items)
+}
+
+func itemsToEvents(items []map[string]types.AttributeValue) ([]garageTypes.GarageEvent, error) {
+	if len(items) == 0 {
 		return nil, fmt.Errorf("no events found")
 	}
 
-	item := out.Items[0]
+	events := make([]garageTypes.GarageEvent, 0, len(items))
+	for _, item := range items {
+		status, err := extractStringFromItem(item, "status")
+		if err != nil || len(status) == 0 {
 
-	status, err := extractStringFromItem(item, "status")
-	if err != nil {
-		return nil, err
+			continue
+		}
+		garageState := garageTypes.GarageState(status)
+
+		eventTime, err := extractNumberFromItem(item, "event_time")
+		if err != nil || eventTime <= 0 {
+
+			continue
+		}
+
+		events = append(events, garageTypes.GarageEvent{
+			GarageState: garageState,
+			EventTime:   time.Unix(int64(eventTime), 0),
+		})
 	}
-	state := garageTypes.GarageState(status)
 
-	eventTime, err := extractNumberFromItem(item, "event_time")
-	if err != nil {
-		return nil, err
-	}
-
-	return &garageTypes.GarageEvent{
-		GarageState: state,
-		EventTime:   time.Unix(int64(eventTime), 0),
-	}, nil
+	return events, nil
 }
 
 func extractStringFromItem(item map[string]types.AttributeValue, key string) (string, error) {

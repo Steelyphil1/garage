@@ -18,12 +18,12 @@ func RouteRequest(ctx context.Context, cfg types.GarageConfig, request types.Bas
 			return nil, err
 		}
 
-		state, err := service.HandleGet(ctx, cfg, *decodedReq)
+		events, err := service.HandleGet(ctx, cfg, *decodedReq)
 		if err != nil {
 			return nil, err
 		}
 
-		return garageHttp.PrepGetResponse(ctx, *state)
+		return garageHttp.PrepGetResponse(ctx, events)
 	}
 	if request.Method == http.MethodPut {
 		decodedReq, err := garageHttp.DecodePutGarageStateRequest(ctx, request)
