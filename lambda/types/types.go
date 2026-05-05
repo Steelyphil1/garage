@@ -9,8 +9,16 @@ import (
 )
 
 type GarageConfig struct {
-	TableName string
-	Partition string
+	TableName   string
+	Partition   string
+	EmailConfig EmailConfig
+}
+
+type EmailConfig struct {
+	EmailTo      string
+	EmailFrom    string
+	EmailSubject string
+	EmailBody    string
 }
 
 type GarageState string
@@ -34,7 +42,13 @@ type GarageEvent struct {
 }
 
 func (r *GaragePutRequest) Valid() error {
-	if r.State != string(GarageStateOpen) && r.State != string(GarageStateClosed) {
+	err := ValidateGarageState(r.State)
+
+	return err
+}
+
+func ValidateGarageState(state string) error {
+	if state != string(GarageStateOpen) && state != string(GarageStateClosed) {
 		return fmt.Errorf("invalid garage state")
 	}
 

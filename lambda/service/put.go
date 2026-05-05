@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	sesTypes "github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 
 	garageTypes "github.com/Steelyphil1/garage/types"
 	"github.com/aws/aws-lambda-go/events"
@@ -29,6 +32,10 @@ func HandlePut(ctx context.Context, cfg garageTypes.GarageConfig, req garageType
 		return nil, fmt.Errorf("loading aws config: %w", err)
 	}
 	client := dynamodb.NewFromConfig(awsCfg)
+
+	if req.State == "Open" {
+		sendNotification(ctx, cfg)
+	}
 
 	now := time.Now()
 
@@ -67,4 +74,40 @@ func HandlePut(ctx context.Context, cfg garageTypes.GarageConfig, req garageType
 		},
 		Body: string(body),
 	}, nil
+}
+
+func sendNotification(ctx context.Context, cfg garageTypes.GarageConfig) {
+	awsCfg, _ := config.LoadDefaultConfig(ctx)
+	client := sesv2.NewFromConfig(awsCfg)
+
+	output, err := client.SendEmail(ctx, &sesv2.SendEmailInput{
+		FromEmailAddress: aws.String(cfg.EmailConfig.EmailFrom),
+		Destination: &sesTypes.Destination{
+			ToAddresses: []string{cfg.EmailConfig.EmailTo},
+		},
+		Content: &sesTypes.EmailContent{
+			Simple: &sesTypes.Message{
+				Subject: &sesTypes.Content{
+					Data:    aws.String(cfg.EmailConfig.EmailSubject),
+					Charset: aws.String("UTF-8"),
+				},
+				Body: &sesTypes.Body{
+					Text: &sesTypes.Content{
+						Data:    aws.String(cfg.EmailConfig.EmailBody),
+						Charset: aws.String("UTF-8"),
+					},
+					Html: &sesTypes.Content{
+						Data:    aws.String("<p>" + cfg.EmailConfig.EmailBody + "</p>"),
+						Charset: aws.String("UTF-8"),
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		// Swallow error to continue with database transaction
+		log.Println("email failed to send, continuing with db transaction")
+	}
+
+	log.Printf("Email sent. MessageID: %s", aws.ToString(output.MessageId))
 }

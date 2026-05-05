@@ -25,10 +25,10 @@ func DecodeGetGarageStateRequest(_ context.Context, r types.BaseHTTPRequest) (*t
 	return &types.GarageGetRequest{}, nil
 }
 
-func PrepGetResponse(ctx context.Context, state types.GarageEvent) (*events.APIGatewayV2HTTPResponse, error) {
-	responseBody, err := json.Marshal(state)
+func PrepGetResponse(ctx context.Context, garageEvents []types.GarageEvent) (*events.APIGatewayV2HTTPResponse, error) {
+	responseBody, err := json.Marshal(garageEvents)
 	if err != nil {
-		return nil, fmt.Errorf("marshalling state")
+		return nil, fmt.Errorf("marshalling garageEvents")
 	}
 
 	return &events.APIGatewayV2HTTPResponse{
